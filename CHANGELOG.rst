@@ -4,23 +4,23 @@ Changelog:
 Release 1.0.0f0:
 ================================================================================
 
-PBSTLIOS-1: Added support to automatically download Boost version form Sourceforge.net
+- PBSTLIOS-1: Added support to automatically download Boost version form Sourceforge.net
 
-PBSTLIOS-2: Added support to automatically discover Xcode path
+- PBSTLIOS-2: Added support to automatically discover Xcode path
 
-PBSTLIOS-3: Added support to automatically use the maximun number of logical cores when using bjam
+- PBSTLIOS-3: Added support to automatically use the maximun number of logical cores when using bjam
 
-PBSTLIOS-4: Added support for autodetection of GCC/Clang versions
+- PBSTLIOS-4: Added support for autodetection of GCC/Clang versions
 
-PBSTLIOS-5: Added support to not build specific libraries
+- PBSTLIOS-5: Added support to not build specific libraries
 
-PBSTLIOS-6: Added support for Boost Test Library integration into Boost.framework
+- PBSTLIOS-6: Added support for Boost Test Library integration into Boost.framework
 
-PBSTLIOS-7: Added support for Boost Math integration with boost.framework
+- PBSTLIOS-7: Added support for Boost Math integration with boost.framework
 
-PBSTLIOS-8: Added README.rst file
+- PBSTLIOS-8: Added README.rst file
 
-PBSTLIOS-9: Added CHANGELOG file
+- PBSTLIOS-9: Added CHANGELOG file
 
 Sucessfully tested on the following condigurations:
 
