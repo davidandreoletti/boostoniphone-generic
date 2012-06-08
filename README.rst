@@ -8,9 +8,9 @@ Builds a Boost framework for the iPhone.
 boostoniphone-generic improves Pete Goodlffe's original boostoniphone. This new 
 script builds most C++ Boost Libraries for iOS.
 
->Creates a set of universal libraries that can be used on an iPhone and in the
->iPhone simulator. Then creates a pseudo-framework to make using boost in Xcode
->less painful (Credit: Pete Goodliffe's original boostoniphone documentation)
+"Creates a set of universal libraries that can be used on an iPhone and in the
+iPhone simulator. Then creates a pseudo-framework to make using boost in Xcode
+less painful" (from Pete Goodliffe's original boostoniphone documentation)
 
 MOTIVATION:
 ================================================================================
@@ -64,9 +64,9 @@ patches.
 
 AUTHOR
 ================================================================================
-- Pete Goodliffe    <http://www.goodliffe.net>           - Original author of 
-                                                     boostoniphone (http://gitorious.org/boostoniphone) 
+- Pete Goodliffe    http://www.goodliffe.net
+    - Original author of boostoniphone (http://gitorious.org/boostoniphone)
 
-- David Andreoletti <http://davidandreoletti.com> - Improved various aspects of 
-                                                     boostoniphone's boost.sh script
+- David Andreoletti http://davidandreoletti.com 
+    - Improved various aspects of boostoniphone's boost.sh script
 
