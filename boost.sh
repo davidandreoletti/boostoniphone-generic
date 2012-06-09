@@ -6,6 +6,7 @@
 #            David Andreoletti (http://davidandreoletti.com)
 #               - Refactored script to compile Boost version:
 #                   - 1.44.0
+#                   - 1.48.0
 #               - Added support to automatically download Boost version from sourceforge.net
 #               - Added support to automatically discover Xcode path.
 #               - Added support to automatically set bjam with -j option with number of logical cores availables on the machine (See bjam's -j option).
@@ -35,7 +36,7 @@
 #                       separated by a single whitespace. An empty string meanings
 #                       no library to exclude
 #
-#                       Default value: graph_parallel mpi wave
+#                       Default value: graph_parallel mpi wave locale
 #
 #    BOOST_VERSION:     version number of the boost library (e.g. 1_41_0). 
 #                       If the version tarball for the requested version does not 
@@ -62,7 +63,7 @@ REGEX_ALL_WHITESPACES="^[ ]*$"
 [[ $BOOST_LIBS =~ $REGEX_ALL_WHITESPACES ]] && BOOST_LIBS=""
 
 # Remove some libraries from being compiled
-: ${BOOST_NO_LIBS:="graph_parallel mpi wave"}
+: ${BOOST_NO_LIBS:="graph_parallel mpi wave locale"}
 
 # Boost library with special names or producing multiple libraries for one name
 BOOST_LIBS_SPECIAL_NAMES[0]="test"
@@ -345,6 +346,45 @@ inventMissingHeaders()
 
 retrieveAllBoostLibrariesRequiringSeparateBuild()
 {
+    case $BOOST_VERSION in
+    1_44_0)
+    retrieveAllBoostLibrariesRequiringSeparateBuild_1_44_0
+    ;;
+    1_48_0)
+    retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0
+    ;;
+    default )
+    abort "This version ($BOOST_VERSION) is not supported"
+    ;;
+    esac
+}
+
+retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0()
+{
+    if [[ -z "$BOOST_LIBS" || "$BOOST_LIBS" == "" || "$BOOST_LIBS" == "all" ]]
+    then
+        echo "Looking for Boost Libraries names requiring separate building..."
+        tmp_out=`cd $BOOST_SRC && ./bootstrap.sh --show-libraries`
+        tmp_outfile="./outfile"
+        echo "$tmp_out" >> "$tmp_outfile"
+        regex0="^- (.*)$"
+        librariesNames=""
+        while read line ; do
+        if [[ $line =~ $regex0 ]]
+        then
+            librariesNames="$librariesNames ${BASH_REMATCH[1]}"
+        fi
+        done < "$tmp_outfile"
+        librariesNames=`echo "$librariesNames" | sed 's/ *$//g'`; #Remove trailing whitespaces
+        librariesNames=`echo "$librariesNames" | sed 's/^ *//g'`; #Remove leading whitespaces
+        BOOST_LIBS="$librariesNames"
+        rm -f "$tmp_outfile"
+    fi
+    doneSection
+}
+
+retrieveAllBoostLibrariesRequiringSeparateBuild_1_44_0()
+{
     if [[ -z "$BOOST_LIBS" || "$BOOST_LIBS" == "" || "$BOOST_LIBS" == "all" ]]
     then
         echo "Looking for Boost Libraries names requiring separate building..."
@@ -356,15 +396,15 @@ retrieveAllBoostLibrariesRequiringSeparateBuild()
         regex1="^(.*)"
         librariesNames=""
         while read line ; do
-            if [[ $line =~ $regex0 ]]
-            then
-                isNextLineLibName=0
-            elif [[ "$isNextLineLibName" -eq 0 ]]
-            then
-                [[ $line =~ $regex1 ]]
-                librariesNames="$librariesNames ${BASH_REMATCH[1]}"
-                isNextLineLibName=1
-            fi
+        if [[ $line =~ $regex0 ]]
+        then
+            isNextLineLibName=0
+        elif [[ "$isNextLineLibName" -eq 0 ]]
+        then
+            [[ $line =~ $regex1 ]]
+            librariesNames="$librariesNames ${BASH_REMATCH[1]}"
+            isNextLineLibName=1
+        fi
         done < "$tmp_outfile"
         librariesNames=`echo "$librariesNames" | sed 's/ *$//g'`; #Remove trailing whitespaces
         librariesNames=`echo "$librariesNames" | sed 's/^ *//g'`; #Remove leading whitespaces

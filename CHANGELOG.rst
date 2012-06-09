@@ -1,6 +1,19 @@
 Changelog:
 ================================================================================
 
+Release 1.1.0f0:
+================================================================================
+
+- PBSTLIOS-11: Fixed retrieving list of Boost libraries requiring separate build for Boost 1.48.0
+
+Sucessfully tested on the following configurations:
+
+- Mac OS X 10.6.8, Xcode 4.0.2 (Build 4A2002a), iOS SDK 4.3, Boost 1.48.0
+- Mac OS X 10.6.8, Xcode 4.0.2 (Build 4A2002a), iOS SDK 4.3, Boost 1.44.0
+
+Notes:
+
+
 Release 1.0.0f0:
 ================================================================================
 
@@ -22,6 +35,6 @@ Release 1.0.0f0:
 
 - PBSTLIOS-9: Added CHANGELOG file
 
-Sucessfully tested on the following condigurations:
+Sucessfully tested on the following configurations:
 
 - Mac OS X 10.6.8, Xcode 4.0.2 (Build 4A2002a), iOS SDK 4.3, Boost 1.44.0
