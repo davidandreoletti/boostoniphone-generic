@@ -6,6 +6,10 @@ Release 1.1.0f0:
 
 - PBSTLIOS-11: Fixed retrieving list of Boost libraries requiring separate build for Boost 1.48.0
 
+- PBSTLIOS-12: Added support for optional sources build
+
+- PBSTLIOS-13: Added support for optional build artifacts cleaning
+
 Sucessfully tested on the following configurations:
 
 - Mac OS X 10.6.8, Xcode 4.0.2 (Build 4A2002a), iOS SDK 4.3, Boost 1.48.0

@@ -48,6 +48,14 @@
 #
 #                       Default value: 4.3
 #
+#    BOOST_OPTION_BUILD: Builds Boost. Valid values: "true" or "false"
+#
+#                       Default value: true
+#
+#    BOOST_OPTION_CLEAN: Cleans building directory. Valid values: "true" or "false"
+#
+#                       Default value: true
+#
 # Grab a cuppa and voila!
 #
 #===============================================================================
@@ -99,6 +107,10 @@ BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION.tar.bz2
 BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 
 : ${BOOST_BJAM_MAX_PARALLEL_COMMANDS:=`sysctl hw.logicalcpu | awk '{print $2}'`}
+#===============================================================================
+
+: ${BOOST_OPTION_CLEAN=:"true"}
+: ${BOOST_OPTION_BUILD=:"true"}
 
 #===============================================================================
 
@@ -146,6 +158,8 @@ echo "COMPILER_SIM_PATH: $COMPILER_SIM_PATH"
 echo "COMPILER_ARM_PATH: $COMPILER_ARM_PATH"
 echo "COMPILER_ARM_VERSION: $COMPILER_ARM_VERSION"
 echo "COMPILER_SIM_VERSION: $COMPILER_SIM_VERSION"
+echo "BOOST_OPTION_CLEAN: $BOOST_OPTION_CLEAN"
+echo "BOOST_OPTION_BUILD: $BOOST_OPTION_BUILD"
 echo
 
 #===============================================================================
@@ -156,6 +170,13 @@ ARCH_ARM="arm"
 #===============================================================================
 # Functions
 #===============================================================================
+
+end()
+{
+    echo
+    echo "End: $@"
+    exit 0
+}
 
 abort()
 {
@@ -682,14 +703,15 @@ downloadBoost
 [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
 mkdir -p $BUILDDIR
 
-cleanEverythingReadyToStart;
-unpackBoost
-patchBoost
+[ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && patchBoost;
+[ "$BOOST_OPTION_BUILD" == "false" ] && end "Build not performed since BOOST_OPTION_BUILD=$BOOST_OPTION_BUILD";
+
 retrieveAllBoostLibrariesRequiringSeparateBuild
 computeBoostLibrariesToCompile
 inventMissingHeaders
 writeBjamUserConfig
 bootstrapBoost
+
 
 case $BOOST_VERSION in
     1_4[48]_0)
