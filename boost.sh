@@ -48,6 +48,10 @@
 #
 #                       Default value: 4.3
 #
+#    XCODE_MAJOR_VERSION: Xcode major version (e.g. 4 for 4.3).
+#
+#                       Default value: 4
+#
 #    BOOST_OPTION_BUILD: Builds Boost. Valid values: "true" or "false"
 #
 #                       Default value: true
@@ -85,6 +89,15 @@ BOOST_LIBS_SPECIAL_NAMES[7]="math_tr1"
 BOOST_LIBS_SPECIAL_NAMES[8]="math"
 BOOST_LIBS_SPECIAL_NAMES[9]="math_tr1f"
 
+# Xcode
+: ${XCODE_MAJOR_VERSION:=4}
+: ${XCODE_DIR:=`system_profiler SPDeveloperToolsDataType -xml |\
+xpath "//*[text()='spdevtools_version']/following-sibling::string[starts-with(text(),'${XCODE_MAJOR_VERSION}')]/../*[text()='spdevtools_path']/following-sibling::string[1]/text()"`}
+if [[ "$XCODE_DIR" == "/Applications/Xcode.app" ]]
+then
+    XCODE_DIR=${XCODE_DIR}/Contents
+fi
+
 : ${IPHONE_SDKVERSION:=4.3}
 : ${EXTRA_CPPFLAGS:="-DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"}
 #: ${EXTRA_CPPFLAGS2:="pch=off"}
@@ -109,8 +122,8 @@ BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 : ${BOOST_BJAM_MAX_PARALLEL_COMMANDS:=`sysctl hw.logicalcpu | awk '{print $2}'`}
 #===============================================================================
 
-: ${BOOST_OPTION_CLEAN=:"true"}
-: ${BOOST_OPTION_BUILD=:"true"}
+: ${BOOST_OPTION_CLEAN:="true"}
+: ${BOOST_OPTION_BUILD:="true"}
 
 #===============================================================================
 
@@ -119,8 +132,11 @@ BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 ARM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneOS.platform/Developer/usr/bin
 SIM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneSimulator.platform/Developer/usr/bin
 
-: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/gcc-4.2"}
-: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/gcc-4.2"}
+#: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/gcc-4.2"}
+#: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/gcc-4.2"}
+: ${COMPILER_ARM_PATH:=`which clang`}
+: ${COMPILER_SIM_PATH:=`which clang++`}
+
 
 compilerFileName=`basename "$COMPILER_ARM_PATH"`
 if [[ $compilerFileName =~ ^gcc ]]
@@ -154,6 +170,7 @@ echo "BUILDDIR:          $BUILDDIR"
 echo "PREFIXDIR:         $PREFIXDIR"
 echo "FRAMEWORKDIR:      $FRAMEWORKDIR"
 echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
+echo "XCODE_MAJOR_VERSION: $XCODE_MAJOR_VERSION"
 echo "COMPILER_SIM_PATH: $COMPILER_SIM_PATH"
 echo "COMPILER_ARM_PATH: $COMPILER_ARM_PATH"
 echo "COMPILER_ARM_VERSION: $COMPILER_ARM_VERSION"
@@ -287,6 +304,14 @@ patchBoost()
 		echo Patching boost ...
 		# Should include patches for libraries I do not use ?
 		doneSection
+    ;;
+    1_50_0)
+        echo Patching boost ...
+        OLDDIR=`pwd`
+        cd ${BOOST_SRC} && patch -p1 < ${OLDDIR}/patch/xcode_43.diff
+        cd ${OLDDIR}
+        # Should include patches for libraries I do not use ?
+        doneSection
 	;;
     esac
 }
@@ -360,7 +385,7 @@ inventMissingHeaders()
     # They are supported on the device, so we copy them from x86 SDK to a staging area
     # to use them on ARM, too.
     echo Invent missing headers
-    cp /Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $BOOST_SRC
+    cp ${XCODE_DIR}/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator${IPHONE_SDKVERSION}.sdk/usr/include/{crt_externs,bzlib}.h $BOOST_SRC
 }
 
 #===============================================================================
@@ -372,6 +397,9 @@ retrieveAllBoostLibrariesRequiringSeparateBuild()
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_44_0
     ;;
     1_48_0)
+    retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0
+    ;;
+    1_50_0)
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0
     ;;
     default )
@@ -471,6 +499,10 @@ buildBoostForiPhoneOS()
             EXTRA_SIM_COMPILE_FLAGS=""
         ;;
         1_48_0)
+            EXTRA_ARM_COMPILE_FLAGS="pch=off"
+            EXTRA_SIM_COMPILE_FLAGS=""
+        ;;
+        1_50_0)
             EXTRA_ARM_COMPILE_FLAGS="pch=off"
             EXTRA_SIM_COMPILE_FLAGS=""
         ;;
@@ -666,7 +698,7 @@ buildFramework()
     || abort "Lipo $1 failed"
 
     echo "Framework: Copying includes..."
-    cp -r $PREFIXDIR/include/boost/*  $FRAMEWORK_BUNDLE/Headers/
+    cp -r $PREFIXDIR/include/boost  $FRAMEWORK_BUNDLE/Headers/
 
     echo "Framework: Creating plist..."
     cat > $FRAMEWORK_BUNDLE/Resources/Info.plist <<EOF
@@ -717,6 +749,9 @@ case $BOOST_VERSION in
     1_4[48]_0)
         buildBoostForiPhoneOS
         ;;
+    1_5[0]_0)
+        buildBoostForiPhoneOS
+    ;;
     default )
         abort "This version ($BOOST_VERSION) is not supported"
         ;;
