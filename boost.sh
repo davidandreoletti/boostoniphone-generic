@@ -114,7 +114,7 @@ fi
 : ${SRCDIR:=`pwd`/src}
 : ${BUILDDIR:=`pwd`/build}
 : ${PREFIXDIR:=`pwd`/prefix}
-: ${FRAMEWORKDIR:=`pwd`/framework}
+: ${FRAMEWORKDIR:=`pwd`/${PREFIXDIR}framework}
 
 BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION.tar.bz2
 BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
