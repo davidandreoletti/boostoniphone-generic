@@ -4,6 +4,8 @@ Changelog:
 Release 1.3.2f0:
 ================================================================================
 
+- PBSTLIOS-23: Retrieved only first Xcode.app path when querying list of Xcode.app installed
+
 - PBSTLIOS-22: Changed default iOS SDK to latest
 
 Release 1.3.1f0:

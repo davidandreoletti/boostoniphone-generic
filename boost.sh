@@ -92,7 +92,7 @@ BOOST_LIBS_SPECIAL_NAMES[9]="math_tr1f"
 # Xcode
 : ${XCODE_MAJOR_VERSION:=4}
 : ${XCODE_DIR:=`system_profiler SPDeveloperToolsDataType -xml |\
-xpath "//*[text()='spdevtools_version']/following-sibling::string[starts-with(text(),'${XCODE_MAJOR_VERSION}')]/../*[text()='spdevtools_path']/following-sibling::string[1]/text()"`}
+xpath "(//*[text()='spdevtools_version']/following-sibling::string[starts-with(text(),'${XCODE_MAJOR_VERSION}')])[1]/../*[text()='spdevtools_path']/following-sibling::string[1]/text()"`}
 if [[ "$XCODE_DIR" == "/Applications/Xcode.app" ]]
 then
     XCODE_DIR=${XCODE_DIR}/Contents
