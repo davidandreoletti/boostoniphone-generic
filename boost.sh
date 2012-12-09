@@ -46,7 +46,7 @@
 #
 #    IPHONE_SDKVERSION: iPhone SDK version (e.g. 4.3).
 #
-#                       Default value: 4.3
+#                       Default value: Latest
 #
 #    XCODE_MAJOR_VERSION: Xcode major version (e.g. 4 for 4.3).
 #
@@ -98,7 +98,12 @@ then
     XCODE_DIR=${XCODE_DIR}/Contents
 fi
 
-: ${IPHONE_SDKVERSION:=4.3}
+: ${IPHONE_SDKVERSION:="Latest"}
+if [ "$IPHONE_SDKVERSION" == "Latest" ]
+then
+	IPHONE_SDKVERSION=`xcodebuild -showsdks | grep iphoneos | sort | tail -n 1 | awk '{ print $2}'`
+fi
+
 : ${EXTRA_CPPFLAGS:="-DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"}
 #: ${EXTRA_CPPFLAGS2:="pch=off"}
 
