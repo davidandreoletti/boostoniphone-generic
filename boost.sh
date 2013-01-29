@@ -137,10 +137,8 @@ BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 ARM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneOS.platform/Developer/usr/bin
 SIM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneSimulator.platform/Developer/usr/bin
 
-#: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/gcc-4.2"}
-#: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/gcc-4.2"}
-: ${COMPILER_ARM_PATH:=`which clang`}
-: ${COMPILER_SIM_PATH:=`which clang++`}
+: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/gcc"}
+: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/gcc"}
 
 
 compilerFileName=`basename "$COMPILER_ARM_PATH"`
@@ -756,8 +754,8 @@ case $BOOST_VERSION in
         ;;
     1_5[0]_0)
         buildBoostForiPhoneOS
-    ;;
-    default )
+        ;;
+    *)
         abort "This version ($BOOST_VERSION) is not supported"
         ;;
 esac
