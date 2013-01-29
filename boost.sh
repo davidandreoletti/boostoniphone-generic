@@ -754,8 +754,8 @@ case $BOOST_VERSION in
         ;;
     1_5[0]_0)
         buildBoostForiPhoneOS
-    ;;
-    default )
+        ;;
+    *)
         abort "This version ($BOOST_VERSION) is not supported"
         ;;
 esac
