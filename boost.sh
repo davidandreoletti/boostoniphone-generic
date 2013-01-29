@@ -399,7 +399,7 @@ retrieveAllBoostLibrariesRequiringSeparateBuild()
     1_44_0)
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_44_0
     ;;
-    1_48_0)
+    1_4[89]_0)
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0
     ;;
     1_50_0)
@@ -497,11 +497,7 @@ buildBoostForiPhoneOS()
     EXTRA_ARM_COMPILE_FLAGS=""
     EXTRA_SIM_COMPILE_FLAGS=""
     case $BOOST_VERSION in
-        1_44_0)
-            EXTRA_ARM_COMPILE_FLAGS="pch=off"
-            EXTRA_SIM_COMPILE_FLAGS=""
-        ;;
-        1_48_0)
+        1_4[489]_0)
             EXTRA_ARM_COMPILE_FLAGS="pch=off"
             EXTRA_SIM_COMPILE_FLAGS=""
         ;;
@@ -749,7 +745,7 @@ bootstrapBoost
 
 
 case $BOOST_VERSION in
-    1_4[48]_0)
+    1_4[489]_0)
         buildBoostForiPhoneOS
         ;;
     1_5[0]_0)
