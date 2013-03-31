@@ -4,7 +4,9 @@ Changelog:
 Release 1.3.3f0:
 ================================================================================
 
-- PBSTLIOS-27: Fix detection Clang compiler version for Xcode toolchain in use
+- PBSTLIOS-25: Added support for selecting both Base SDK and Deployment Target SDK
+
+- PBSTLIOS-27: Fixed detection Clang compiler version for Xcode toolchain in use
 
 - PBSTLIOS-24: Added support for detecting Xcode version
 

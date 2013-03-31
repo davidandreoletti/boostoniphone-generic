@@ -44,9 +44,17 @@
 #
 #                       Default value: 1_44_0
 #
-#    IPHONE_SDKVERSION: iPhone SDK version (e.g. 4.3).
-#
+#    IPHONE_SDKVERSION: iPhone SDK version
+#                       Represents "Base SDK" (Xcode build setting: SDKROOT)
 #                       Default value: Latest
+#                       Valid values: major.minor(.patch) (e.g. 4.3) OR any of the values below
+#                                     Latest: Newest SDK Version installed on your computer
+#                                     Oldest: Oldest SDK Version installed on your computer
+#
+#    IPHONE_SDKVERSION_DEPLOYMENT_TARGET:      iPhone SDK version (e.g. 4.3).
+#                                              Represents "Deployment Target"
+#                                              Default value: Same as IPHONE_SDKVERSION's default value. Rationale: See Xcode Build Settings MACOSX_DEPLOYMENT_TARGET documentation. 
+#                                              Valid values: Same as IPHONE_SDKVERSION's valid values.
 #
 #    XCODE_MAJOR_VERSION: Xcode major version (e.g. 4 for 4.3).
 #
@@ -110,10 +118,24 @@ then
     XCODE_DIR=${XCODE_DIR}/Contents
 fi
 
+XCODEBUILD_SHOWSDKS=`xcodebuild -showsdks`
 : ${IPHONE_SDKVERSION:="Latest"}
+: ${IPHONE_SDKVERSION_DEPLOYMENT_TARGET:=$IPHONE_SDKVERSION}
 if [ "$IPHONE_SDKVERSION" == "Latest" ]
 then
-	IPHONE_SDKVERSION=`xcodebuild -showsdks | grep iphoneos | sort | tail -n 1 | awk '{ print $2}'`
+	IPHONE_SDKVERSION=`echo "${XCODEBUILD_SHOWSDKS}" | grep iphoneos | sort | tail -n 1 | awk '{ print $2}'`
+fi
+if [ "$IPHONE_SDKVERSION" == "Oldest" ]
+then
+	IPHONE_SDKVERSION=`echo "${XCODEBUILD_SHOWSDKS}" | grep iphoneos | tail -n 1 | awk '{ print $2}'`
+fi
+if [ "$IPHONE_SDKVERSION_DEPLOYMENT_TARGET" == "Latest" ]
+then
+	IPHONE_SDKVERSION_DEPLOYMENT_TARGET=`echo "${XCODEBUILD_SHOWSDKS}" | grep iphoneos | sort | tail -n 1 | awk '{ print $2}'`
+fi
+if [ "$IPHONE_SDKVERSION_DEPLOYMENT_TARGET" == "Oldest" ]
+then
+	IPHONE_SDKVERSION_DEPLOYMENT_TARGET=`echo "${XCODEBUILD_SHOWSDKS}" | grep iphoneos | tail -n 1 | awk '{ print $2}'`
 fi
 
 : ${EXTRA_CPPFLAGS:="-DBOOST_AC_USE_PTHREADS -DBOOST_SP_USE_PTHREADS"}
@@ -191,6 +213,7 @@ echo "BUILDDIR:          $BUILDDIR"
 echo "PREFIXDIR:         $PREFIXDIR"
 echo "FRAMEWORKDIR:      $FRAMEWORKDIR"
 echo "IPHONE_SDKVERSION: $IPHONE_SDKVERSION"
+echo "IPHONE_SDKVERSION_DEPLOYMENT_TARGET: $IPHONE_SDKVERSION_DEPLOYMENT_TARGET"
 echo "XCODE_MAJOR_VERSION: $XCODE_MAJOR_VERSION"
 echo "COMPILER_SIM_PATH: $COMPILER_SIM_PATH"
 echo "COMPILER_ARM_PATH: $COMPILER_ARM_PATH"
@@ -313,7 +336,7 @@ getLibraryFilePath()
         fi
     done;
 
-    local filePath="${BOOST_SRC}/bin.v2/libs/${expectedLibName}/build/darwin-${compilerVersion}~${target}/release/architecture-${arch}/link-static/macosx-version-${target}-$IPHONE_SDKVERSION/${compilerFlagsDependentPath}target-os-iphone/threading-multi/libboost_${currentLibName}.a"
+    local filePath="${BOOST_SRC}/bin.v2/libs/${expectedLibName}/build/darwin-${compilerVersion}~${target}/release/architecture-${arch}/link-static/macosx-version-min-${target}-$IPHONE_SDKVERSION_DEPLOYMENT_TARGET/macosx-version-${target}-$IPHONE_SDKVERSION/${compilerFlagsDependentPath}target-os-iphone/threading-multi/libboost_${currentLibName}.a"
     echo "$filePath"
 }
 
@@ -532,10 +555,10 @@ buildBoostForiPhoneOS()
 
     cd $BOOST_SRC
     
-    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} --prefix="$PREFIXDIR" toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install $EXTRA_ARM_COMPILE_FLAGS
+    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} --prefix="$PREFIXDIR" toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} macosx-version-min=iphone-${IPHONE_SDKVERSION_DEPLOYMENT_TARGET} define=_LITTLE_ENDIAN link=static install $EXTRA_ARM_COMPILE_FLAGS
     doneSection
 
-    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} toolset=darwin architecture=x86 target-os=iphone macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage $EXTRA_SIM_COMPILE_FLAGS
+    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} toolset=darwin architecture=x86 target-os=iphone macosx-version=iphonesim-${IPHONE_SDKVERSION} macosx-version-min=iphonesim-${IPHONE_SDKVERSION_DEPLOYMENT_TARGET} link=static stage $EXTRA_SIM_COMPILE_FLAGS
     doneSection
 }
 
