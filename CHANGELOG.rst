@@ -4,7 +4,8 @@ Changelog:
 Release 1.3.3f0:
 ================================================================================
 
-- PBSTLIOS-26: Add support for dry-run compilation (Script debugging feature ONLY)
+- PBSTLIOS-24: Added support for detecting Xcode version
+- PBSTLIOS-26: Added support for dry-run compilation (Script debugging feature ONLY)
 
 Release 1.3.2f0:
 ================================================================================
