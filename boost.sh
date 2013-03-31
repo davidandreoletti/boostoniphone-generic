@@ -147,14 +147,17 @@ BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 
 : ${DEVELOPER_DIR_PATH:="`xcode-select -print-path`"}
 
-ARM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneOS.platform/Developer/usr/bin
-SIM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneSimulator.platform/Developer/usr/bin
+if [ $XCODE_VERSION_MAJOR -eq 4 -a $XCODE_VERSION_MINOR -eq 5 ]
+then
+	ARM_DEV_DIR=${DEVELOPER_DIR_PATH}/Toolchains/XcodeDefault.xctoolchain/usr/bin
+	SIM_DEV_DIR=${ARM_DEV_DIR}
+else
+	ARM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneOS.platform/Developer/usr/bin
+	SIM_DEV_DIR=${DEVELOPER_DIR_PATH}/Platforms/iPhoneSimulator.platform/Developer/usr/bin
+fi
 
-#: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/gcc-4.2"}
-#: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/gcc-4.2"}
-: ${COMPILER_ARM_PATH:=`which clang`}
-: ${COMPILER_SIM_PATH:=`which clang++`}
-
+: ${COMPILER_ARM_PATH:="${ARM_DEV_DIR}/clang"}
+: ${COMPILER_SIM_PATH:="${SIM_DEV_DIR}/clang"}
 
 compilerFileName=`basename "$COMPILER_ARM_PATH"`
 if [[ $compilerFileName =~ ^gcc ]]
