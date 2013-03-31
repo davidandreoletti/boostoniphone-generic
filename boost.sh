@@ -125,6 +125,7 @@ BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION.tar.bz2
 BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
 
 : ${BOOST_BJAM_MAX_PARALLEL_COMMANDS:=`sysctl hw.logicalcpu | awk '{print $2}'`}
+: ${BOOST_BJAM_DRYRUN_FLAG:=""} // Set to "-n" for dry-run
 #===============================================================================
 
 : ${BOOST_OPTION_CLEAN:="true"}
@@ -516,10 +517,10 @@ buildBoostForiPhoneOS()
 
     cd $BOOST_SRC
     
-    ./bjam -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} --prefix="$PREFIXDIR" toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install $EXTRA_ARM_COMPILE_FLAGS
+    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} --prefix="$PREFIXDIR" toolset=darwin architecture=arm target-os=iphone macosx-version=iphone-${IPHONE_SDKVERSION} define=_LITTLE_ENDIAN link=static install $EXTRA_ARM_COMPILE_FLAGS
     doneSection
 
-    ./bjam -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} toolset=darwin architecture=x86 target-os=iphone macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage $EXTRA_SIM_COMPILE_FLAGS
+    ./bjam ${BOOST_BJAM_DRYRUN_FLAG} -j ${BOOST_BJAM_MAX_PARALLEL_COMMANDS} toolset=darwin architecture=x86 target-os=iphone macosx-version=iphonesim-${IPHONE_SDKVERSION} link=static stage $EXTRA_SIM_COMPILE_FLAGS
     doneSection
 }
 
