@@ -38,9 +38,11 @@
 #
 #                       Default value: graph_parallel mpi wave locale
 #
-#    BOOST_VERSION:     version number of the boost library (e.g. 1_41_0). 
-#                       If the version tarball for the requested version does not 
-#                       exist, then it will be downloaded.
+#    BOOST_SRC_VERSION: version number of the boost library source code to
+#                       download (e.g. 1_55_0). Once the source is downloaded and
+#                       extracted, the script will pull the actual X_XX_XX version
+#                       string out of <boost-src>/boost/version.hpp, and set that
+#                       as the value of BOOST_VERSION.
 #
 #                       Default value: 1_44_0
 #
@@ -72,7 +74,7 @@
 #
 #===============================================================================
 
-: ${BOOST_VERSION:=1_44_0}
+: ${BOOST_SRC_VERSION:=1_44_0}
 : ${BOOST_LIBS:=""}
 
 # Add extra libraries to compilation
@@ -155,8 +157,8 @@ fi
 : ${PREFIXDIR:=`pwd`/prefix}
 : ${FRAMEWORKDIR:=${PREFIXDIR}/framework}
 
-BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_VERSION.tar.bz2
-BOOST_SRC=$SRCDIR/boost_${BOOST_VERSION}
+BOOST_TARBALL=$TARBALLDIR/boost_$BOOST_SRC_VERSION.tar.bz2
+BOOST_SRC=$SRCDIR/boost_${BOOST_SRC_VERSION}
 
 : ${BOOST_BJAM_MAX_PARALLEL_COMMANDS:=`sysctl hw.logicalcpu | awk '{print $2}'`}
 : ${BOOST_BJAM_DRYRUN_FLAG:=""} // Set to "-n" for dry-run
@@ -204,9 +206,9 @@ SIM_COMBINED_LIB=$BUILDDIR/lib_boost_x86.a
 
 #===============================================================================
 
-echo "BOOST_VERSION:     $BOOST_VERSION"
+echo "BOOST_SRC_VERSION: $BOOST_SRC_VERSION"
 echo "BOOST_LIBS:        $BOOST_LIBS"
-echo "BOOST_NO_LIBS:        $BOOST_NO_LIBS"
+echo "BOOST_NO_LIBS:     $BOOST_NO_LIBS"
 echo "BOOST_TARBALL:     $BOOST_TARBALL"
 echo "BOOST_SRC:         $BOOST_SRC"
 echo "BUILDDIR:          $BUILDDIR"
@@ -341,6 +343,28 @@ getLibraryFilePath()
 }
 
 #===============================================================================
+extractBoostVersion()
+{
+	local boostVersionHeader="${BOOST_SRC}/boost/version.hpp"
+	
+	echo Extracting actual Boost version from $boostVersionHeader
+	
+	# Could also get BOOST_LIB_VERSION string and strip off the double quotes, but then would have to
+	# correctly append the patch number since it is often ommitted
+	local boostVersionNumber=$(grep ^'#define BOOST_VERSION' < $boostVersionHeader | awk '{print $3}')
+	
+	local boostMajorVersion=$((boostVersionNumber / 100000))
+	local boostMinorVersion=$(((boostVersionNumber / 100 ) % 1000))
+	local boostPatchLevel=$((boostVersionNumber % 100))
+	
+	BOOST_VERSION="${boostMajorVersion}_${boostMinorVersion}_${boostPatchLevel}"
+	
+	echo "    ...extracted BOOST_VERSION=$BOOST_VERSION"
+	
+	doneSection
+}
+
+#===============================================================================
 patchBoost()
 {
     case $BOOST_VERSION in
@@ -377,12 +401,12 @@ downloadBoost()
 {
     if [ ! -f "$BOOST_TARBALL" ]
     then
-        echo "Downloading Boost $BOOST_VERSION ..."
-        version=${BOOST_VERSION//_/.}
-        curl --progress-bar -L -o boost_$BOOST_VERSION.tar.bz2 http://sourceforge.net/projects/boost/files/boost/$version/boost_$BOOST_VERSION.tar.bz2/download
+        echo "Downloading Boost $BOOST_SRC_VERSION ..."
+        version=${BOOST_SRC_VERSION//_/.}
+        curl --progress-bar -L -o boost_$BOOST_SRC_VERSION.tar.bz2 http://sourceforge.net/projects/boost/files/boost/$version/boost_$BOOST_SRC_VERSION.tar.bz2/download
         doneSection
     else
-        echo "Boost $BOOST_VERSION already donwloaded."
+        echo "Boost $BOOST_SRC_VERSION already donwloaded."
         echo ""
     fi
 }
@@ -779,7 +803,7 @@ downloadBoost
 [ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
 mkdir -p $BUILDDIR
 
-[ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && patchBoost;
+[ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && extractBoostVersion && patchBoost;
 [ "$BOOST_OPTION_BUILD" == "false" ] && end "Build not performed since BOOST_OPTION_BUILD=$BOOST_OPTION_BUILD";
 
 retrieveAllBoostLibrariesRequiringSeparateBuild
