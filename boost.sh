@@ -406,7 +406,7 @@ downloadBoost()
         curl --progress-bar -L -o boost_$BOOST_SRC_VERSION.tar.bz2 http://sourceforge.net/projects/boost/files/boost/$version/boost_$BOOST_SRC_VERSION.tar.bz2/download
         doneSection
     else
-        echo "Boost $BOOST_SRC_VERSION already donwloaded."
+        echo "Boost $BOOST_SRC_VERSION already downloaded."
         echo ""
     fi
 }
@@ -414,10 +414,24 @@ downloadBoost()
 #===============================================================================
 unpackBoost()
 {
-    echo Unpacking boost into $SRCDIR...
-    [ -d $SRCDIR ]    || mkdir -p $SRCDIR
-    [ -d $BOOST_SRC ] || ( cd $SRCDIR; tar xfj $BOOST_TARBALL )
-    [ -d $BOOST_SRC ] && echo "    ...unpacked as $BOOST_SRC"
+    # When downloadBoost() tries a file that doesn't exist, we still get a
+    # response from the server and put that response into the tarball file, so
+    # we need to check whether that tarball is a valid one.
+
+    if [ -f "$BOOST_TARBALL" ] && tar tf "$BOOST_TARBALL"
+    then
+        echo Unpacking boost into $SRCDIR...
+        [ -d $SRCDIR ]    || mkdir -p $SRCDIR
+        [ -d $BOOST_SRC ] || ( cd $SRCDIR; tar xfj $BOOST_TARBALL )
+        [ -d $BOOST_SRC ] && echo "    ...unpacked as $BOOST_SRC"
+    else
+        echo No source tarball available for version $BOOST_SRC_VERSION. Attempting to download Boost source from repository.
+        if [ $(svn co -r ${BOOST_SRC_VERSION} http://svn.boost.org/svn/boost/trunk ${BOOST_SRC}) -ne 0 ]
+        then
+            abort "    ...unable to download Boost source from repo"
+        fi
+    fi
+
     doneSection
 }
 
@@ -800,7 +814,6 @@ EOF
 
 downloadBoost
 
-[ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
 mkdir -p $BUILDDIR
 
 [ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && extractBoostVersion && patchBoost;
