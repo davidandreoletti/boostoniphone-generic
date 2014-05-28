@@ -38,9 +38,11 @@
 #
 #                       Default value: graph_parallel mpi wave locale
 #
-#    BOOST_VERSION:     version number of the boost library (e.g. 1_41_0). 
-#                       If the version tarball for the requested version does not 
-#                       exist, then it will be downloaded.
+#    BOOST_VERSION:     version number of the boost library source code to
+#                       download (e.g. 1_55_0). Once the source is downloaded and
+#                       extracted, the script will pull the actual X_XX_XX version
+#                       string out of <boost-src>/boost/version.hpp, and set that
+#                       as the value of BOOST_HPP_VERSION.
 #
 #                       Default value: 1_44_0
 #
@@ -206,7 +208,7 @@ SIM_COMBINED_LIB=$BUILDDIR/lib_boost_x86.a
 
 echo "BOOST_VERSION:     $BOOST_VERSION"
 echo "BOOST_LIBS:        $BOOST_LIBS"
-echo "BOOST_NO_LIBS:        $BOOST_NO_LIBS"
+echo "BOOST_NO_LIBS:     $BOOST_NO_LIBS"
 echo "BOOST_TARBALL:     $BOOST_TARBALL"
 echo "BOOST_SRC:         $BOOST_SRC"
 echo "BUILDDIR:          $BUILDDIR"
@@ -341,9 +343,31 @@ getLibraryFilePath()
 }
 
 #===============================================================================
+extractBoostVersion()
+{
+	local boostVersionHeader="${BOOST_SRC}/boost/version.hpp"
+	
+	echo Extracting actual Boost version from $boostVersionHeader
+	
+	# Could also get BOOST_LIB_VERSION string and strip off the double quotes, but then would have to
+	# correctly append the patch number since it is often ommitted
+	local boostVersionNumber=$(grep ^'#define BOOST_VERSION' < $boostVersionHeader | awk '{print $3}')
+	
+	local boostMajorVersion=$((boostVersionNumber / 100000))
+	local boostMinorVersion=$(((boostVersionNumber / 100 ) % 1000))
+	local boostPatchLevel=$((boostVersionNumber % 100))
+	
+	BOOST_HPP_VERSION="${boostMajorVersion}_${boostMinorVersion}_${boostPatchLevel}"
+	
+	echo "    ...extracted BOOST_HPP_VERSION=$BOOST_HPP_VERSION"
+	
+	doneSection
+}
+
+#===============================================================================
 patchBoost()
 {
-    case $BOOST_VERSION in
+    case $BOOST_HPP_VERSION in
 	1_48_0)
 		echo Patching boost ...
 		# Should include patches for libraries I do not use ?
@@ -382,7 +406,7 @@ downloadBoost()
         curl --progress-bar -L -o boost_$BOOST_VERSION.tar.bz2 http://sourceforge.net/projects/boost/files/boost/$version/boost_$BOOST_VERSION.tar.bz2/download
         doneSection
     else
-        echo "Boost $BOOST_VERSION already donwloaded."
+        echo "Boost $BOOST_VERSION already downloaded."
         echo ""
     fi
 }
@@ -390,10 +414,24 @@ downloadBoost()
 #===============================================================================
 unpackBoost()
 {
-    echo Unpacking boost into $SRCDIR...
-    [ -d $SRCDIR ]    || mkdir -p $SRCDIR
-    [ -d $BOOST_SRC ] || ( cd $SRCDIR; tar xfj $BOOST_TARBALL )
-    [ -d $BOOST_SRC ] && echo "    ...unpacked as $BOOST_SRC"
+    # When downloadBoost() tries a file that doesn't exist, we still get a
+    # response from the server and put that response into the tarball file, so
+    # we need to check whether that tarball is a valid one.
+
+    if [ -f "$BOOST_TARBALL" ] && tar tf "$BOOST_TARBALL"
+    then
+        echo Unpacking boost into $SRCDIR...
+        [ -d $SRCDIR ]    || mkdir -p $SRCDIR
+        [ -d $BOOST_SRC ] || ( cd $SRCDIR; tar xfj $BOOST_TARBALL )
+        [ -d $BOOST_SRC ] && echo "    ...unpacked as $BOOST_SRC"
+    else
+        echo No source tarball available for version $BOOST_VERSION. Attempting to download Boost source from repository.
+        if [ $(svn co -r ${BOOST_VERSION} http://svn.boost.org/svn/boost/trunk ${BOOST_SRC}) -ne 0 ]
+        then
+            abort "    ...unable to download Boost source from repo"
+        fi
+    fi
+
     doneSection
 }
 
@@ -436,7 +474,7 @@ inventMissingHeaders()
 
 retrieveAllBoostLibrariesRequiringSeparateBuild()
 {
-    case $BOOST_VERSION in
+    case $BOOST_HPP_VERSION in
     1_44_0)
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_44_0
     ;;
@@ -447,7 +485,7 @@ retrieveAllBoostLibrariesRequiringSeparateBuild()
     retrieveAllBoostLibrariesRequiringSeparateBuild_1_48_0
     ;;
     default )
-    abort "This version ($BOOST_VERSION) is not supported"
+    abort "This version ($BOOST_HPP_VERSION) is not supported"
     ;;
     esac
 }
@@ -537,7 +575,7 @@ buildBoostForiPhoneOS()
     # pch=off required to build Boost Math Library properly (see: http://continuous.wordpress.com/2010/04/11/building-boost-graph-library-with-python/)
     EXTRA_ARM_COMPILE_FLAGS=""
     EXTRA_SIM_COMPILE_FLAGS=""
-    case $BOOST_VERSION in
+    case $BOOST_HPP_VERSION in
         1_44_0)
             EXTRA_ARM_COMPILE_FLAGS="pch=off"
             EXTRA_SIM_COMPILE_FLAGS=""
@@ -706,8 +744,8 @@ scrunchAllLibsTogetherInOneLibPerPlatform()
                   FRAMEWORK_NAME=boost
                FRAMEWORK_VERSION=A
 
-       FRAMEWORK_CURRENT_VERSION=$BOOST_VERSION
- FRAMEWORK_COMPATIBILITY_VERSION=$BOOST_VERSION
+       FRAMEWORK_CURRENT_VERSION=$BOOST_HPP_VERSION
+ FRAMEWORK_COMPATIBILITY_VERSION=$BOOST_HPP_VERSION
 
 buildFramework()
 {
@@ -776,10 +814,9 @@ EOF
 
 downloadBoost
 
-[ -f "$BOOST_TARBALL" ] || abort "Source tarball missing."
 mkdir -p $BUILDDIR
 
-[ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && patchBoost;
+[ "$BOOST_OPTION_CLEAN" == "true" ] && cleanEverythingReadyToStart && unpackBoost && extractBoostVersion && patchBoost;
 [ "$BOOST_OPTION_BUILD" == "false" ] && end "Build not performed since BOOST_OPTION_BUILD=$BOOST_OPTION_BUILD";
 
 retrieveAllBoostLibrariesRequiringSeparateBuild
@@ -789,7 +826,7 @@ writeBjamUserConfig
 bootstrapBoost
 
 
-case $BOOST_VERSION in
+case $BOOST_HPP_VERSION in
     1_4[48]_0)
         buildBoostForiPhoneOS
         ;;
@@ -797,7 +834,7 @@ case $BOOST_VERSION in
         buildBoostForiPhoneOS
     ;;
     default )
-        abort "This version ($BOOST_VERSION) is not supported"
+        abort "This version ($BOOST_HPP_VERSION) is not supported"
         ;;
 esac
 
